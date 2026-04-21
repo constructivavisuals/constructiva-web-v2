@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+/* ======================================================================
+   Constructiva — Design Tokens
+   (dle SPEC.md sekce 1.1 Barvy, 1.2 Fonty, 1.4 Typografie)
+   ====================================================================== */
+
+:root {
+  /* Brand */
+  --color-primary: #a8c5d6;   /* světle modrá — accent */
+  --color-secondary: #152a3e; /* tmavě modrá — hlavní brand */
+  --color-tertiary: #8a9bae;  /* šedá — sekundární text */
+  --color-neutral: #0d1f2d;   /* velmi tmavá — nejtmavší background */
+
+  /* Utility */
+  --color-white: #ffffff;
+  --color-offwhite: #f5f7fa;
+  --color-text: #152a3e;
+  --color-text-muted: #8a9bae;
+  --color-border: #e5eaf0;
+
+  /* Live indicator (zelená tečka "aktuální projekt") */
+  --color-live: #10b981;
+}
+
+/* Tailwind 4 @theme → zveřejníme tokeny jako utility třídy (bg-primary, text-secondary, …) */
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-tertiary: var(--color-tertiary);
+  --color-neutral: var(--color-neutral);
+  --color-offwhite: var(--color-offwhite);
+  --color-live: var(--color-live);
+  --color-border: var(--color-border);
+
+  --font-manrope: var(--font-manrope);
+  --font-inter: var(--font-inter);
+}
+
+/* ======================================================================
+   Typescale (dle SPEC.md 1.4)
+   ====================================================================== */
+
+.text-hero {
+  font-size: clamp(3rem, 10vw, 9rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+.text-display {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+}
+.text-h1 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.text-h2 {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  line-height: 1.2;
+}
+.text-body {
+  font-size: clamp(1rem, 1.2vw, 1.125rem);
+  line-height: 1.6;
+}
+.text-label {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+/* ======================================================================
+   Základ
+   ====================================================================== */
+
+html,
+body {
+  background: var(--color-offwhite);
+  color: var(--color-secondary);
+}
+
+body {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Manrope jako default pro headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Lenis smooth scroll — doporučený reset (viz lenis docs) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* Focus styly (přístupnost) */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
