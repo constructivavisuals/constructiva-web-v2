@@ -38,9 +38,9 @@ export function Nav() {
         href="https://portal.constructiva.cz"
         target="_blank"
         rel="noopener noreferrer"
-        className="px-5 py-2.5 rounded-full text-secondary text-sm font-medium transition-opacity hover:opacity-90"
+        className="px-5 py-2.5 rounded-full text-white text-sm font-medium transition-opacity hover:opacity-90"
         style={{
-          background: "var(--color-primary)",
+          background: "var(--color-secondary)",
         }}
       >
         Klientský portál

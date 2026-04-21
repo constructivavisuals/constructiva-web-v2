@@ -1,12 +1,12 @@
 "use client";
 
 // Sekce 1 · Hero (SPEC Sekce 1)
-// Fullscreen video background + nadpis + CTA "Více o tom co děláme".
+// Fullscreen video background + nadpis + glass pill CTA s logem uvnitř.
 // CTA smooth-scrolluje na #section-2 přes Lenis.
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { gsap } from "gsap";
-import { ArrowDown } from "lucide-react";
 import { asset } from "@/lib/assets";
 import { useLenis } from "../providers/LenisProvider";
 import { LOADER_FILL_DURATION } from "@/lib/motion";
@@ -20,6 +20,7 @@ export function Section1Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const ctaRef = useRef<HTMLButtonElement>(null);
+  const scrollHintRef = useRef<HTMLDivElement>(null);
   const lenis = useLenis();
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export function Section1Hero() {
         },
       );
       gsap.fromTo(
-        ctaRef.current,
+        [ctaRef.current, scrollHintRef.current],
         { y: 40, opacity: 0 },
         {
           y: 0,
@@ -44,6 +45,7 @@ export function Section1Hero() {
           duration: 1.2,
           ease: "power3.out",
           delay: CTA_DELAY,
+          stagger: 0.1,
         },
       );
     }, sectionRef);
@@ -109,12 +111,12 @@ export function Section1Hero() {
         </h1>
       </div>
 
-      {/* CTA pill — absolutní ve spodní části, glass effect */}
+      {/* CTA pill — glass styl shodný s Navem, uvnitř malé logo + popisek */}
       <button
         ref={ctaRef}
         type="button"
         onClick={handleScrollDown}
-        className="z-10 inline-flex items-center gap-2 text-white transition-all hover:bg-white/20"
+        className="z-10 inline-flex items-center gap-3 text-white transition-opacity hover:opacity-90"
         style={{
           position: "absolute",
           bottom: "32px",
@@ -122,18 +124,64 @@ export function Section1Hero() {
           transform: "translateX(-50%)",
           opacity: 0,
           background: "rgba(255, 255, 255, 0.12)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
           border: "1px solid rgba(255, 255, 255, 0.2)",
           borderRadius: "9999px",
-          padding: "10px 20px",
+          padding: "8px 20px 8px 8px",
           fontSize: "14px",
           fontWeight: 500,
         }}
       >
+        <span
+          className="flex items-center justify-center rounded-full"
+          style={{
+            width: "32px",
+            height: "32px",
+            background: "var(--color-secondary)",
+          }}
+          aria-hidden="true"
+        >
+          <Image
+            src="/images/logo.svg"
+            alt=""
+            width={60}
+            height={16}
+            className="h-3 w-auto object-contain"
+            style={{ filter: "invert(1)" }}
+          />
+        </span>
         Více o tom co děláme
-        <ArrowDown aria-hidden="true" className="w-3.5 h-3.5" />
       </button>
+
+      {/* Scroll down indikátor — vpravo dole, decentní */}
+      <div
+        ref={scrollHintRef}
+        aria-hidden="true"
+        className="absolute bottom-8 right-8 z-10 flex items-center gap-3 text-white text-sm"
+        style={{ opacity: 0 }}
+      >
+        <span
+          className="relative flex items-start justify-center"
+          style={{
+            width: "18px",
+            height: "28px",
+            border: "1px solid rgba(255, 255, 255, 0.6)",
+            borderRadius: "9999px",
+          }}
+        >
+          <span
+            className="mt-1.5"
+            style={{
+              width: "2px",
+              height: "6px",
+              background: "rgba(255, 255, 255, 0.8)",
+              borderRadius: "9999px",
+            }}
+          />
+        </span>
+        Scroll down
+      </div>
     </section>
   );
 }
