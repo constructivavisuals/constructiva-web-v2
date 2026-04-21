@@ -13,28 +13,60 @@ export function Section2TileMosaic() {
   useEffect(() => {
     if (!sectionRef.current || !gridRef.current || !centerRef.current) return;
 
+    const section = sectionRef.current;
+
     const mm = gsap.matchMedia();
 
     mm.add("(min-width: 768px)", () => {
       // Počáteční stav: celý grid scale(2.5) s origin na centrálu.
       // Centrál (2fr z 1+2+1 cols = 50 % gridu × 2fr z 1+2+1 rows = 50 % výšky)
       // při scale 2 by přesně pokryl viewport; 2.5 je rezerva proti artifaktům.
-      gsap.set(gridRef.current, { scale: 2.5, transformOrigin: "center center" });
+      gsap.set(gridRef.current, {
+        scale: 2.5,
+        transformOrigin: "center center",
+        force3D: true,
+      });
 
-      // Scroll: grid scale 2 → 1 → plná mozaika.
+      // Scroll: grid scale 2.5 → 1 → plná mozaika.
       gsap.to(gridRef.current, {
         scale: 1,
         ease: "none",
+        force3D: true,
         scrollTrigger: {
-          trigger: sectionRef.current,
+          trigger: section,
           start: "top top",
           end: "bottom bottom",
           scrub: 1,
+          invalidateOnRefresh: true,
         },
       });
     });
 
-    return () => mm.revert();
+    // PERF: pauzuj videa když je sekce mimo viewport. 9 paralelních HTML5
+    // videí spotřebovává GPU i když je uživatel jinde na stránce.
+    const videos = Array.from(
+      section.querySelectorAll<HTMLVideoElement>("video"),
+    );
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          videos.forEach((v) => {
+            v.play().catch(() => {
+              /* autoplay policy může odmítnout — není problém */
+            });
+          });
+        } else {
+          videos.forEach((v) => v.pause());
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(section);
+
+    return () => {
+      mm.revert();
+      io.disconnect();
+    };
   }, []);
 
   const tiles = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -48,8 +80,13 @@ export function Section2TileMosaic() {
       <div
         ref={stickyRef}
         className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center"
+        style={{ contain: "layout paint" }}
       >
-        <div ref={gridRef} className="mosaic-grid">
+        <div
+          ref={gridRef}
+          className="mosaic-grid"
+          style={{ willChange: "transform" }}
+        >
           {/* 8 okolních dlaždic (3×3 grid minus střed) */}
           {tiles.map((n) => (
             <div key={n} className={`tile tile-${n}`}>
@@ -108,6 +145,12 @@ export function Section2TileMosaic() {
           overflow: hidden;
           border-radius: 8px;
           background: var(--color-neutral);
+          /* force GPU layer — 9 videí na jedné GPU texture místo 9 vrstev */
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          contain: layout paint;
         }
         .tile-1 { grid-area: t1; }
         .tile-2 { grid-area: t2; }
@@ -155,10 +198,16 @@ export function Section2TileMosaic() {
             display: flex;
             flex-direction: column;
             height: auto;
-            gap: 12px;
+            width: 100%;
+            gap: 10px;
+            padding: 10px;
           }
           .tile {
             aspect-ratio: 16 / 9;
+            width: 100%;
+          }
+          .tile-heading {
+            font-size: clamp(1.25rem, 5vw, 2rem);
           }
         }
       `}</style>
