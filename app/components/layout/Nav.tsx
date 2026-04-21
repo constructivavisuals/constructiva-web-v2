@@ -1,7 +1,7 @@
 "use client";
 
 // Plovoucí glass pill nav — centrovaný horizontálně, 24px od vrchu.
-// Logo (bílé přes CSS filter) + "Klientský portál" tmavý button.
+// Logo (SVG, bílá varianta přes invert filter) + "Klientský portál" CTA.
 
 import Link from "next/link";
 import Image from "next/image";
@@ -9,7 +9,7 @@ import Image from "next/image";
 export function Nav() {
   return (
     <header
-      className="fixed top-6 left-1/2 z-50 flex items-center gap-3 px-3 py-2"
+      className="fixed top-6 left-1/2 z-50 flex items-center gap-6 px-5 py-2"
       style={{
         transform: "translateX(-50%)",
         background: "rgba(255, 255, 255, 0.12)",
@@ -22,15 +22,15 @@ export function Nav() {
       <Link
         href="/"
         aria-label="Constructiva — domů"
-        className="flex items-center pl-3 pr-2"
+        className="flex items-center pl-4 pr-6"
       >
         <Image
-          src="/images/logo.png"
+          src="/images/logo.svg"
           alt="Constructiva"
-          width={110}
-          height={24}
+          width={180}
+          height={40}
           priority
-          className="h-6 w-auto object-contain"
+          className="h-9 w-auto object-contain"
           style={{ filter: "invert(1)" }}
         />
       </Link>
@@ -38,9 +38,9 @@ export function Nav() {
         href="https://portal.constructiva.cz"
         target="_blank"
         rel="noopener noreferrer"
-        className="px-4 py-2 rounded-full text-white text-sm font-medium transition-colors hover:opacity-90"
+        className="px-5 py-2.5 rounded-full text-secondary text-sm font-medium transition-opacity hover:opacity-90"
         style={{
-          background: "var(--color-secondary)",
+          background: "var(--color-primary)",
         }}
       >
         Klientský portál

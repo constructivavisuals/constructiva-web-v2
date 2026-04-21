@@ -71,12 +71,12 @@ export function Section0Loader() {
       aria-label="Načítání stránky"
       aria-live="polite"
     >
-      {/* Logo — bílá varianta přes CSS filter invert (zachovává alpha) */}
+      {/* Logo — SVG, bílá varianta přes CSS filter invert (zachovává alpha) */}
       <Image
-        src="/images/logo.png"
+        src="/images/logo.svg"
         alt="Constructiva"
-        width={120}
-        height={32}
+        width={180}
+        height={48}
         priority
         style={{
           filter: "invert(1)",
