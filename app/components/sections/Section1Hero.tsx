@@ -93,8 +93,8 @@ export function Section1Hero() {
         }}
       />
 
-      {/* Content — headline posazen do spodnější třetiny viewportu */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-start px-6 pt-[38vh]">
+      {/* Content — headline posazen nízko (cca 55vh), s dostatkem mezery k CTA (bottom 32px) */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-start px-6 pt-[55vh]">
         <h1
           ref={headlineRef}
           className="font-manrope text-white text-center max-w-5xl"
