@@ -1,16 +1,13 @@
 "use client";
 
-// Sekce 2 · Tile Mosaic (SPEC Sekce 2 + uživatelské revize)
+// Sekce 2 · Tile Mosaic (SPEC Sekce 2 — minimalistická implementace)
 //
-// Efekt má 2 staged fáze na scrollu:
-//   Fáze A (progress 0 → 0.5): centrální dlaždice se zmenšuje ze scale 2.4
-//     na 1.0. Okolní dlaždice jsou skryté (opacity 0, scale 0.8).
-//   Fáze B (progress 0.5 → 1.0): okolní dlaždice se objeví (opacity 0 → 1)
-//     a zvětší (scale 0.8 → 1) do svých finálních grid pozic. Centrál už
-//     drží scale 1.
+// Okolní dlaždice jsou STATICKÉ — vždy na svých grid pozicích, žádná JS
+// animace. Celou dobu viditelné, ale na začátku jsou překryté zvětšeným
+// centrálem (z-index 10). Jak se centrál zmenšuje přes scroll, postupně
+// odhaluje okolní tiles.
 //
-// Dlaždice zůstávají VŽDY na svých grid-area pozicích — pohyb zajišťuje
-// jen opacity + scale, takže nejsou potřeba off-screen translate triky.
+// Jediná animace: scale 2.4 → 1 na centrálu, scrub-řízená ScrollTriggerem.
 // Pinning: CSS sticky.
 
 import { useEffect, useRef } from "react";
@@ -20,9 +17,9 @@ import { asset } from "@/lib/assets";
 
 type TileSpec = {
   id: string;
-  area: string;       // grid-area name
+  area: string;
   videoSrc: string;
-  bg: string;         // gradient fallback dokud není video
+  bg: string;
 };
 
 const TILES: TileSpec[] = [
@@ -42,7 +39,7 @@ const TILES: TileSpec[] = [
     bg: "linear-gradient(135deg, #0d1f2d 0%, #2a4a6a 100%)" },
 ];
 
-// Center — vlastní (3.) nezávislé video, scale 2.4 pokrývá celý viewport.
+// Center tile — vlastní video, scale 2.4 pokrývá celý viewport.
 const CENTER_INIT_SCALE = 2.4;
 const CENTER_VIDEO = asset("/videos/tiles/center.mp4");
 const CENTER_BG =
@@ -50,17 +47,19 @@ const CENTER_BG =
 
 export function Section2TileMosaic() {
   const sectionRef = useRef<HTMLElement>(null);
+  const centerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const section = sectionRef.current;
-    if (!section) return;
+    const center = centerRef.current;
+    if (!section || !center) return;
 
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
 
+      // Desktop: jediná animace — centrál scale 2.4 → 1.
       mm.add("(min-width: 768px)", () => {
-        // Fáze A — centrál 2.4 → 1 přes první polovinu scroll spanu.
-        gsap.to(".center-tile", {
+        gsap.to(center, {
           scale: 1,
           ease: "none",
           scrollTrigger: {
@@ -70,26 +69,9 @@ export function Section2TileMosaic() {
             scrub: 1,
           },
         });
-
-        // Fáze B — okolní tiles se objeví v druhé polovině scrollu.
-        // start '50% top' = trigger.50% dosáhne viewport.top (= v půlce scroll spanu).
-        gsap.to(
-          TILES.map((t) => `.tile-${t.id}`).join(", "),
-          {
-            opacity: 1,
-            scale: 1,
-            ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "50% top",
-              end: "bottom bottom",
-              scrub: 1,
-            },
-          },
-        );
       });
 
-      // Mobile: žádné JS animace. CSS @media přebije inline styly.
+      // Mobile: žádná JS animace. CSS @media přebije inline scale.
     }, section);
 
     return () => ctx.revert();
@@ -102,14 +84,18 @@ export function Section2TileMosaic() {
       aria-label="Co děláme — mozaika služeb"
       className="relative w-full overflow-hidden bg-offwhite md:h-[200vh]"
     >
-      <div className="w-full md:sticky md:top-0 md:h-screen md:overflow-hidden">
+      {/* Sticky pin (CSS-only). overflow-hidden je kritický — při scale 2.4
+          by centrál přesahoval viewport a roztahoval scrollbar. */}
+      <div className="w-full md:sticky md:top-0 md:h-screen md:w-screen md:overflow-hidden">
         <div className="mosaic">
           {TILES.map((tile) => (
             <Tile key={tile.id} tile={tile} />
           ))}
 
-          {/* Center tile — vlastní video, text overlay, z-index 10 */}
+          {/* Center tile — jediná animovaná. Inline scale(2.4) je SSR-stable
+              počáteční stav; GSAP to animuje na scale(1) přes scrub. */}
           <div
+            ref={centerRef}
             className="mosaic-tile center-tile relative overflow-hidden rounded-sm"
             style={{
               gridArea: "center",
@@ -147,7 +133,7 @@ export function Section2TileMosaic() {
       </div>
 
       {/* Grid layout (Tailwind 4 nemá grid-template-areas utility).
-          Mobile resetuje grid a ruší inline transform/opacity přes !important. */}
+          Mobile resetuje grid + ruší inline scale/z-index přes !important. */}
       <style>{`
         .mosaic {
           display: grid;
@@ -176,8 +162,9 @@ export function Section2TileMosaic() {
             grid-area: auto !important;
             width: 100%;
             aspect-ratio: 16 / 9;
+          }
+          .mosaic .center-tile {
             transform: none !important;
-            opacity: 1 !important;
             z-index: auto !important;
           }
         }
@@ -186,20 +173,14 @@ export function Section2TileMosaic() {
   );
 }
 
+// Okolní dlaždice — statické. Žádný transform, žádná opacity, žádný GSAP.
 function Tile({ tile }: { tile: TileSpec }) {
-  // SSR počáteční stav — skryté, mírně zmenšené.
-  // Na desktopu GSAP animuje opacity + scale na 1.
-  // Na mobilu CSS @media přebije opacity: 1 !important.
   return (
     <div
       className={`mosaic-tile tile-${tile.id} relative overflow-hidden rounded-sm`}
       style={{
         gridArea: tile.area,
         background: tile.bg,
-        opacity: 0,
-        transform: "scale(0.8)",
-        transformOrigin: "center center",
-        willChange: "opacity, transform",
       }}
     >
       <video
