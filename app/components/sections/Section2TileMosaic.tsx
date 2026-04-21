@@ -16,9 +16,10 @@ export function Section2TileMosaic() {
     const mm = gsap.matchMedia();
 
     mm.add("(min-width: 768px)", () => {
-      // Počáteční stav: celý grid scale(2) s origin na centrálu.
-      // Centrál (2fr z 1+2+1 cols = 50 % gridu) dominuje viewportu; okolí je mimo.
-      gsap.set(gridRef.current, { scale: 2, transformOrigin: "center center" });
+      // Počáteční stav: celý grid scale(2.5) s origin na centrálu.
+      // Centrál (2fr z 1+2+1 cols = 50 % gridu × 2fr z 1+2+1 rows = 50 % výšky)
+      // při scale 2 by přesně pokryl viewport; 2.5 je rezerva proti artifaktům.
+      gsap.set(gridRef.current, { scale: 2.5, transformOrigin: "center center" });
 
       // Scroll: grid scale 2 → 1 → plná mozaika.
       gsap.to(gridRef.current, {
@@ -36,7 +37,7 @@ export function Section2TileMosaic() {
     return () => mm.revert();
   }, []);
 
-  const tiles = [1, 2, 3, 4, 5, 6, 7];
+  const tiles = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return (
     <section
@@ -49,7 +50,7 @@ export function Section2TileMosaic() {
         className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center"
       >
         <div ref={gridRef} className="mosaic-grid">
-          {/* 7 okolních dlaždic */}
+          {/* 8 okolních dlaždic (3×3 grid minus střed) */}
           {tiles.map((n) => (
             <div key={n} className={`tile tile-${n}`}>
               <div className="tile-fallback" />
@@ -92,11 +93,11 @@ export function Section2TileMosaic() {
         .mosaic-grid {
           display: grid;
           grid-template-columns: 1fr 2fr 1fr;
-          grid-template-rows: 1fr 1.5fr 1fr;
+          grid-template-rows: 1fr 2fr 1fr;
           grid-template-areas:
             "t1 t2 t3"
             "t4 tc t5"
-            "t6 t7 t7";
+            "t6 t7 t8";
           gap: 8px;
           width: 100vw;
           height: 100vh;
@@ -115,6 +116,7 @@ export function Section2TileMosaic() {
         .tile-5 { grid-area: t5; }
         .tile-6 { grid-area: t6; }
         .tile-7 { grid-area: t7; }
+        .tile-8 { grid-area: t8; }
         .tile-center { grid-area: tc; }
         .tile-fallback {
           position: absolute;
