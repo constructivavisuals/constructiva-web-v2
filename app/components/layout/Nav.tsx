@@ -31,7 +31,6 @@ export function Nav() {
           height={40}
           priority
           className="h-9 w-auto object-contain"
-          style={{ filter: "invert(1)" }}
         />
       </Link>
       <Link

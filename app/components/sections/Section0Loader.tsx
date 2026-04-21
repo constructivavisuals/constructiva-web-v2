@@ -71,17 +71,14 @@ export function Section0Loader() {
       aria-label="Načítání stránky"
       aria-live="polite"
     >
-      {/* Logo — SVG, bílá varianta přes CSS filter invert (zachovává alpha) */}
+      {/* Logo — plnobarevné SVG, bez filtru (sedí na tmavě modré pozadí) */}
       <Image
         src="/images/logo.svg"
         alt="Constructiva"
         width={180}
         height={48}
         priority
-        style={{
-          filter: "invert(1)",
-          marginBottom: "24px",
-        }}
+        style={{ marginBottom: "24px" }}
       />
 
       {/* Název v brand stylu pod logem */}

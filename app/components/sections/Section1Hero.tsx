@@ -147,8 +147,7 @@ export function Section1Hero() {
             alt=""
             width={60}
             height={16}
-            className="h-3 w-auto object-contain"
-            style={{ filter: "invert(1)" }}
+            className="h-4 w-auto object-contain"
           />
         </span>
         Více o tom co děláme
