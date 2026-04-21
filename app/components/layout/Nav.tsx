@@ -27,10 +27,10 @@ export function Nav() {
         <Image
           src="/images/logo.svg"
           alt="Constructiva"
-          width={180}
-          height={40}
+          width={240}
+          height={56}
           priority
-          className="h-9 w-auto object-contain"
+          className="h-[52px] w-auto object-contain"
         />
       </Link>
       <Link
