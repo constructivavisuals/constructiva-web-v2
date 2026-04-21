@@ -91,8 +91,8 @@ export function Section1Hero() {
         }}
       />
 
-      {/* Content — headline vertikálně centrovaný, pt-24 dává odstup od plovoucího navu */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 pt-24">
+      {/* Content — headline posazen do spodnější třetiny viewportu */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-start px-6 pt-[38vh]">
         <h1
           ref={headlineRef}
           className="font-manrope text-white text-center max-w-5xl"
