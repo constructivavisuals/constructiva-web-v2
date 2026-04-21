@@ -31,16 +31,16 @@ export function Nav() {
           height={24}
           priority
           className="h-6 w-auto object-contain"
-          style={{ filter: "brightness(0) invert(1)" }}
+          style={{ filter: "invert(1)" }}
         />
       </Link>
       <Link
         href="https://portal.constructiva.cz"
         target="_blank"
         rel="noopener noreferrer"
-        className="px-4 py-2 rounded-full text-white text-sm font-medium transition-colors hover:bg-white/20"
+        className="px-4 py-2 rounded-full text-white text-sm font-medium transition-colors hover:opacity-90"
         style={{
-          background: "rgba(0, 0, 0, 0.5)",
+          background: "var(--color-secondary)",
         }}
       >
         Klientský portál

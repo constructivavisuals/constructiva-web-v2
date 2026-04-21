@@ -71,7 +71,7 @@ export function Section0Loader() {
       aria-label="Načítání stránky"
       aria-live="polite"
     >
-      {/* Logo — bílá varianta přes CSS filter */}
+      {/* Logo — bílá varianta přes CSS filter invert (zachovává alpha) */}
       <Image
         src="/images/logo.png"
         alt="Constructiva"
@@ -79,7 +79,7 @@ export function Section0Loader() {
         height={32}
         priority
         style={{
-          filter: "brightness(0) invert(1)",
+          filter: "invert(1)",
           marginBottom: "24px",
         }}
       />
