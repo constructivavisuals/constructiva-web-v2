@@ -107,6 +107,24 @@ html.lenis body {
   overflow: clip;
 }
 
+/* ======================================================================
+   Sekce 3 · Bosch Sequence — phase text overlays
+   ====================================================================== */
+
+.phase-text {
+  position: absolute;
+  color: white;
+  font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  font-size: clamp(3rem, 10vw, 9rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.3s ease;
+  will-change: opacity;
+}
+
 /* Focus styly (přístupnost) */
 :focus-visible {
   outline: 2px solid var(--color-primary);
