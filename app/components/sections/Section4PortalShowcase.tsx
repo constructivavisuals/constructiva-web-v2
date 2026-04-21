@@ -1,16 +1,19 @@
 "use client";
 
-// Sekce 4 · Portal Showcase (Relats-style)
+// Sekce 4 · Portal Showcase — cinematic 3D flythrough (Relats-inspired)
 //
-// Tři fáze napříč ~500vh scrollem, celá sekce pinned přes CSS sticky:
+// Scéna ve 3D prostoru (CSS `perspective: 2000px`), 3 vrstvy:
+//   - BACK  (z: -800, scale 1.6) — mockup-bg-blur.png (staveniště)
+//   - MID   (z:  0,   rotateX 8°, rotateY -4°) — mockup.png (laptop)
+//   - FRONT (z: 400, opacity 0)   — HTML 3-column layout
 //
-//   A (0 – 15 %): fullscreen mockup.png, statická. Scroll hint dole.
-//   B (15 – 55 %): zoom do sidebaru laptopu (scale 1 → 4.5,
-//       origin 24 % 50 %, blur 0 → 6px). V posledních 15 % fáze B
-//       crossfade na mockup-bg-blur.png. V posledních 10 % fade-in
-//       HTML fáze C.
-//   C (55 – 100 %): pinned 3-column layout (video / sidebar / info).
-//       Scroll-spy přepíná 6 služeb po 7.5 % progressu.
+// Timeline pinned, scrub 1, napříč ~500vh:
+//   A (0-15 %)   : klidová scéna, hint "Scroll ↓"
+//   B (15-70 %)  : kamerový průlet — laptop se rovná + zvětšuje
+//                   (rotateX/Y → 0, scale → 3.5, z → 600),
+//                   pozadí fade-out + mírný zoom
+//   C přechod (70-80 %): laptop fade-out → HTML fade-in (z 400 → 0)
+//   C hold (80-100 %): HTML drží, scroll-spy 6 služeb × ~3.3 %
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -38,8 +41,8 @@ type Metric = { icon: LucideIcon; label: string; value: string };
 
 type Service = {
   id: string;
-  label: string;        // sidebar label (Titlecase)
-  title: string;        // hero nadpis pravé karty (UPPERCASE)
+  label: string;
+  title: string;
   icon: LucideIcon;
   metrics: [Metric, Metric];
   description: string;
@@ -136,32 +139,36 @@ const SERVICES: Service[] = [
 
 export function Section4PortalShowcase() {
   const sectionRef = useRef<HTMLElement>(null);
-  const mockupRef = useRef<HTMLDivElement>(null);
-  const mockupBlurRef = useRef<HTMLDivElement>(null);
-  const scrollHintRef = useRef<HTMLDivElement>(null);
-  const phaseCRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
+  const laptopRef = useRef<HTMLDivElement>(null);
+  const htmlLayerRef = useRef<HTMLDivElement>(null);
+  const hintRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // ---- Desktop scroll choreography ----
   useEffect(() => {
     const section = sectionRef.current;
-    const mockup = mockupRef.current;
-    const blur = mockupBlurRef.current;
-    const phaseC = phaseCRef.current;
-    const hint = scrollHintRef.current;
-    if (!section || !mockup || !blur || !phaseC) return;
+    const bg = bgRef.current;
+    const laptop = laptopRef.current;
+    const htmlLayer = htmlLayerRef.current;
+    const hint = hintRef.current;
+    if (!section || !bg || !laptop || !htmlLayer) return;
 
     const mm = gsap.matchMedia();
 
+    // Desktop — 3D cinematic flythrough
     mm.add("(min-width: 768px)", () => {
-      // Výchozí stav: mockup 1×, bez blur; blur vrstva a fáze C skryté.
-      gsap.set(mockup, { scale: 1, filter: "blur(0px)", opacity: 1 });
-      gsap.set(blur, { opacity: 0 });
-      gsap.set(phaseC, { opacity: 0, pointerEvents: "none" });
-      if (hint) gsap.set(hint, { opacity: 1 });
+      // Výchozí stav (shoduje se s inline style — GSAP si ho synchronizuje).
+      gsap.set(laptop, {
+        rotationX: 8,
+        rotationY: -4,
+        scale: 1,
+        z: 0,
+        opacity: 1,
+      });
+      gsap.set(bg, { scale: 1.6, opacity: 1 });
+      gsap.set(htmlLayer, { opacity: 0, z: 400 });
 
-      // Jediný ScrollTrigger — používáme timeline s jednou 0-1 časovou osou,
-      // kde klíčové události dávám na konkrétní "position" hodnoty.
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
@@ -172,49 +179,85 @@ export function Section4PortalShowcase() {
           onUpdate: (self) => {
             const p = self.progress;
 
-            // Scroll hint fade out během prvních 10 %
+            // Hint fade-out (15-20 %)
             if (hint) {
-              hint.style.opacity = p < 0.1 ? String(1 - p / 0.1) : "0";
+              if (p < 0.15) hint.style.opacity = "1";
+              else if (p < 0.2) hint.style.opacity = String(1 - (p - 0.15) / 0.05);
+              else hint.style.opacity = "0";
             }
 
-            // Scroll-spy ve fázi C (55 → 100 %), rozdělí do 6 sub-fází.
-            if (p >= 0.55) {
-              const cp = (p - 0.55) / 0.45; // 0-1 v rámci fáze C
+            // Scroll-spy v C hold (80-100 %) → 6 služeb × 3.33 %
+            if (p >= 0.8) {
+              const sp = (p - 0.8) / 0.2;
               const idx = Math.min(
-                Math.floor(cp * SERVICES.length),
+                Math.floor(sp * SERVICES.length),
                 SERVICES.length - 1,
               );
               setActiveIndex((prev) => (prev !== idx ? idx : prev));
             } else {
-              setActiveIndex(0);
+              setActiveIndex((prev) => (prev !== 0 ? 0 : prev));
             }
           },
         },
       });
 
-      // Fáze B: zoom + blur na mockupu (15 – 55 %)
-      tl.fromTo(
-        mockup,
-        { scale: 1, filter: "blur(0px)" },
-        { scale: 4.5, filter: "blur(6px)", ease: "none", duration: 0.4 },
+      // Fáze B (15-70 %) — kamerový průlet
+      tl.to(
+        laptop,
+        {
+          rotationX: 0,
+          rotationY: 0,
+          scale: 3.5,
+          z: 600,
+          ease: "none",
+          duration: 0.55,
+        },
+        0.15,
+      );
+      tl.to(
+        bg,
+        {
+          scale: 2.2,
+          opacity: 0,
+          ease: "none",
+          duration: 0.55,
+        },
         0.15,
       );
 
-      // Crossfade mockup → mockup-bg-blur (40 – 55 %)
-      tl.to(blur, { opacity: 1, ease: "none", duration: 0.15 }, 0.4);
-
-      // Fáze C fade-in (45 – 55 %)
+      // Fáze C přechod (70-80 %) — laptop mizí, HTML se objeví
       tl.to(
-        phaseC,
-        { opacity: 1, pointerEvents: "auto", ease: "none", duration: 0.1 },
-        0.45,
+        laptop,
+        { opacity: 0, ease: "none", duration: 0.1 },
+        0.7,
       );
-
-      // Mockup se v 55 % úplně schová — blur vrstva drží pozadí fáze C
-      tl.to(mockup, { opacity: 0, ease: "none", duration: 0.01 }, 0.55);
+      tl.to(
+        htmlLayer,
+        { opacity: 1, z: 0, ease: "none", duration: 0.1 },
+        0.7,
+      );
     });
 
-    return () => mm.revert();
+    // PERF: pause videí když je sekce mimo viewport.
+    const videos = Array.from(
+      section.querySelectorAll<HTMLVideoElement>("video"),
+    );
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          videos.forEach((v) => v.play().catch(() => {}));
+        } else {
+          videos.forEach((v) => v.pause());
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(section);
+
+    return () => {
+      mm.revert();
+      io.disconnect();
+    };
   }, []);
 
   return (
@@ -222,69 +265,110 @@ export function Section4PortalShowcase() {
       ref={sectionRef}
       id="section-4"
       aria-label="Klientský portál — showcase"
-      className="relative h-[500vh] bg-black"
+      className="relative md:h-[500vh]"
     >
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
-        {/* Vrstva 1 — mockup (zoomuje + blur se škáluje) */}
+      {/* ════════ Desktop 3D scéna ════════ */}
+      <div
+        className="hidden md:block md:sticky md:top-0 md:h-screen md:w-full md:overflow-hidden bg-white"
+        style={{ perspective: "2000px" }}
+      >
         <div
-          ref={mockupRef}
+          ref={sceneRef}
           className="absolute inset-0"
-          style={{
-            backgroundImage: `url(${asset("/images/portal/mockup.png")})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center center",
-            backgroundRepeat: "no-repeat",
-            transformOrigin: "24% 50%",
-            willChange: "transform, filter, opacity",
-          }}
-        />
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          {/* BACK — staveniště */}
+          <div
+            ref={bgRef}
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${asset("/images/portal/mockup-bg-blur.png")})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              transform: "translateZ(-800px) scale(1.6)",
+              willChange: "transform, opacity",
+            }}
+          />
 
-        {/* Vrstva 2 — rozostřené staveniště (pozadí fáze C) */}
-        <div
-          ref={mockupBlurRef}
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url(${asset("/images/portal/mockup-bg-blur.png")})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center center",
-            backgroundRepeat: "no-repeat",
-            opacity: 0,
-            willChange: "opacity",
-          }}
-        />
+          {/* MID — laptop */}
+          <div
+            ref={laptopRef}
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${asset("/images/portal/mockup.png")})`,
+              backgroundSize: "contain",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              transform: "translateZ(0) rotateX(8deg) rotateY(-4deg) scale(1)",
+              willChange: "transform, opacity",
+            }}
+          />
 
-        {/* Scroll hint */}
+          {/* FRONT — HTML layout */}
+          <div
+            ref={htmlLayerRef}
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
+              opacity: 0,
+              transform: "translateZ(400px)",
+              willChange: "transform, opacity",
+            }}
+          >
+            <SidebarAndCards
+              services={SERVICES}
+              activeIndex={activeIndex}
+            />
+          </div>
+        </div>
+
+        {/* Hint „Scroll ↓" */}
         <div
-          ref={scrollHintRef}
+          ref={hintRef}
           aria-hidden="true"
-          className="absolute bottom-10 left-1/2 z-20 -translate-x-1/2 flex items-center gap-2 text-white text-sm"
-          style={{ textShadow: "0 2px 20px rgba(0,0,0,0.4)" }}
+          className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 text-sm"
+          style={{ color: "rgba(21, 42, 62, 0.55)" }}
         >
           Scroll ↓
         </div>
+      </div>
 
-        {/* Fáze C — 3-column pinned layout */}
+      {/* ════════ Mobile — statický mockup + stack ════════ */}
+      <div className="md:hidden bg-white">
         <div
-          ref={phaseCRef}
-          className="phase-c absolute inset-0 z-10 hidden md:flex items-center justify-center gap-6 px-8"
-          style={{ opacity: 0 }}
-        >
-          <VideoCard services={SERVICES} activeIndex={activeIndex} />
-          <SidebarNav activeIndex={activeIndex} />
-          <InfoCard services={SERVICES} activeIndex={activeIndex} />
-        </div>
-
-        {/* Mobile fallback — 6 sekcí pod sebou (desktop layout je md:flex) */}
-        <div className="md:hidden absolute inset-0 overflow-y-auto bg-black">
-          <MobileStack services={SERVICES} />
-        </div>
+          className="aspect-video w-full bg-no-repeat bg-center"
+          style={{
+            backgroundImage: `url(${asset("/images/portal/mockup.png")})`,
+            backgroundSize: "contain",
+          }}
+        />
+        <MobileStack services={SERVICES} />
       </div>
     </section>
   );
 }
 
 // ═══════════════════════════════════════════════════════════
-// Levá karta — video s crossfade mezi službami
+// Desktop — 3-column layout uvnitř htmlLayerRef
+// ═══════════════════════════════════════════════════════════
+function SidebarAndCards({
+  services,
+  activeIndex,
+}: {
+  services: Service[];
+  activeIndex: number;
+}) {
+  return (
+    <div className="flex items-center justify-center gap-16 px-8">
+      <VideoCard services={services} activeIndex={activeIndex} />
+      <SidebarNav activeIndex={activeIndex} />
+      <InfoCard services={services} activeIndex={activeIndex} />
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// Levá karta — video s crossfade
 // ═══════════════════════════════════════════════════════════
 function VideoCard({
   services,
@@ -295,8 +379,8 @@ function VideoCard({
 }) {
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl"
-      style={{ width: "32vw", height: "62vh" }}
+      className="relative overflow-hidden rounded-2xl bg-white shadow-xl"
+      style={{ width: "28vw", height: "60vh" }}
     >
       {services.map((s, i) => (
         <video
@@ -317,36 +401,36 @@ function VideoCard({
 }
 
 // ═══════════════════════════════════════════════════════════
-// Střední sidebar — logo + label + 6 položek se scroll-spy
+// Střední sidebar — bílý clean, active bg #E8F0F7
 // ═══════════════════════════════════════════════════════════
 function SidebarNav({ activeIndex }: { activeIndex: number }) {
   return (
     <nav
       aria-label="Služby portálu"
-      className="relative flex flex-col overflow-hidden rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl"
-      style={{ width: "300px", height: "62vh" }}
+      className="flex flex-col rounded-2xl bg-white shadow-xl"
+      style={{ width: "320px", padding: "32px" }}
     >
       {/* Header — logo + label */}
-      <div className="flex items-center gap-3 border-b border-white/15 px-5 py-4">
+      <div className="flex items-center gap-3 pb-5">
         <Image
           src="/images/logo.svg"
           alt="Constructiva"
-          width={32}
-          height={32}
-          className="h-8 w-8 object-contain"
+          width={36}
+          height={36}
+          className="h-9 w-9 object-contain"
         />
         <div className="flex flex-col leading-tight">
-          <span className="text-[11px] font-semibold tracking-[0.2em] text-white">
+          <span className="text-[11px] font-semibold tracking-[0.2em] text-[#152A3E]">
             CONSTRUCTIVA
           </span>
-          <span className="text-[10px] tracking-[0.18em] text-white/60">
+          <span className="text-[10px] tracking-[0.18em] text-[#9AA5B1]">
             KLIENTSKÝ PORTÁL
           </span>
         </div>
       </div>
 
       {/* 6 položek */}
-      <ul className="flex flex-1 flex-col gap-1 p-3">
+      <ul className="flex flex-col gap-1">
         {SERVICES.map((s, i) => {
           const Icon = s.icon;
           const active = i === activeIndex;
@@ -356,14 +440,15 @@ function SidebarNav({ activeIndex }: { activeIndex: number }) {
                 aria-current={active ? "true" : undefined}
                 className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors duration-200"
                 style={{
-                  background: active
-                    ? "rgba(168, 197, 214, 0.20)"
-                    : "transparent",
-                  color: active ? "#ffffff" : "rgba(255,255,255,0.6)",
+                  background: active ? "#E8F0F7" : "transparent",
+                  color: active ? "#152A3E" : "#9AA5B1",
                   fontWeight: active ? 500 : 400,
                 }}
               >
-                <Icon className="h-4 w-4 flex-shrink-0" />
+                <Icon
+                  className="h-4 w-4 flex-shrink-0"
+                  strokeWidth={active ? 2.25 : 1.75}
+                />
                 <span>{s.label}</span>
               </div>
             </li>
@@ -386,21 +471,22 @@ function InfoCard({
 }) {
   return (
     <div
-      className="relative rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl"
-      style={{ width: "26vw", minHeight: "52vh" }}
+      className="relative rounded-2xl bg-white shadow-xl"
+      style={{ width: "26vw", minHeight: "50vh", maxHeight: "60vh" }}
     >
       {services.map((s, i) => (
         <div
           key={s.id}
-          className="absolute inset-0 flex flex-col justify-between p-8 transition-opacity duration-300"
+          className="absolute inset-0 flex flex-col justify-between p-10 transition-opacity duration-300"
           style={{ opacity: i === activeIndex ? 1 : 0 }}
           aria-hidden={i === activeIndex ? undefined : "true"}
         >
           <div className="flex flex-col gap-6">
             <h3
-              className="font-manrope font-bold text-white"
+              className="font-manrope font-bold"
               style={{
-                fontSize: "clamp(2rem, 3.5vw, 3rem)",
+                color: "#152A3E",
+                fontSize: "clamp(1.75rem, 2.6vw, 2.5rem)",
                 lineHeight: 1.05,
                 letterSpacing: "-0.02em",
               }}
@@ -408,31 +494,34 @@ function InfoCard({
               {s.title}
             </h3>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {s.metrics.map((m, j) => {
                 const Icon = m.icon;
                 return (
                   <div key={j} className="flex items-start gap-3">
-                    <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-white/70" />
+                    <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-[#152A3E]" />
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[11px] tracking-[0.18em] text-white/70">
+                      <span className="text-[10px] tracking-[0.18em] text-[#9AA5B1]">
                         {m.label}
                       </span>
-                      <span className="text-base text-white">{m.value}</span>
+                      <span className="text-sm text-[#152A3E]">{m.value}</span>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            <p className="text-sm leading-relaxed text-white/70">
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: "#5A6B7C" }}
+            >
               {s.description}
             </p>
           </div>
 
           <a
             href="#"
-            className="inline-flex items-center gap-2 self-end text-lg text-white hover:underline"
+            className="inline-flex items-center gap-2 self-end text-base font-medium text-[#152A3E] hover:underline"
           >
             {s.cta}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -444,21 +533,21 @@ function InfoCard({
 }
 
 // ═══════════════════════════════════════════════════════════
-// Mobile verze — 6 sekcí pod sebou, normální scroll, bez pin
+// Mobile verze — stack 6 karet pod sebou
 // ═══════════════════════════════════════════════════════════
 function MobileStack({ services }: { services: Service[] }) {
   return (
-    <div className="flex flex-col gap-8 px-4 py-10">
+    <div className="flex flex-col gap-8 px-4 py-10 bg-white">
       {services.map((s) => {
         const Icon = s.icon;
         return (
           <article
             key={s.id}
-            className="flex flex-col gap-4 rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur-md"
+            className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-lg"
           >
             <header className="flex items-center gap-3">
-              <Icon className="h-5 w-5 text-white" />
-              <h3 className="font-manrope text-xl font-semibold text-white">
+              <Icon className="h-5 w-5 text-[#152A3E]" />
+              <h3 className="font-manrope text-xl font-semibold text-[#152A3E]">
                 {s.label}
               </h3>
             </header>
@@ -478,21 +567,24 @@ function MobileStack({ services }: { services: Service[] }) {
                 const MIcon = m.icon;
                 return (
                   <div key={j} className="flex items-center gap-2">
-                    <MIcon className="h-3.5 w-3.5 text-white/60" />
-                    <span className="text-[10px] tracking-widest text-white/60">
+                    <MIcon className="h-3.5 w-3.5 text-[#9AA5B1]" />
+                    <span className="text-[10px] tracking-widest text-[#9AA5B1]">
                       {m.label}
                     </span>
-                    <span className="text-sm text-white">{m.value}</span>
+                    <span className="text-sm text-[#152A3E]">{m.value}</span>
                   </div>
                 );
               })}
             </div>
-            <p className="text-sm leading-relaxed text-white/70">
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: "#5A6B7C" }}
+            >
               {s.description}
             </p>
             <a
               href="#"
-              className="inline-flex items-center gap-1 text-sm text-white hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-medium text-[#152A3E] hover:underline"
             >
               {s.cta}
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
