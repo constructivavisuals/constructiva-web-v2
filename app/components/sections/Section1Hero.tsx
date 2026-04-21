@@ -96,36 +96,46 @@ export function Section1Hero() {
         src={asset("/videos/hero/showreel.mp4")}
       />
 
-      {/* Dark overlay pro čitelnost textu. */}
-      <div aria-hidden="true" className="absolute inset-0 bg-black/30" />
+      {/* Gradient dark overlay — top lighter, bottom darker pro čitelnost CTA. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/60"
+      />
 
-      {/* Content */}
+      {/* Content — headline centrovaný, CTA absolutní ve spodní třetině. */}
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 md:px-12 lg:px-20">
         <h1
           ref={headlineRef}
-          className="text-hero font-manrope font-medium text-white text-center max-w-5xl mx-auto"
-          style={{ opacity: 0 }}
+          className="font-manrope font-medium text-white text-center max-w-4xl mx-auto"
+          style={{
+            opacity: 0,
+            fontSize: "clamp(2.5rem, 5.5vw, 5.5rem)",
+            lineHeight: 1.1,
+            letterSpacing: "-0.02em",
+          }}
         >
           Stavíme viditelnost
           <br />
           vašich projektů
         </h1>
-
-        <button
-          ref={ctaRef}
-          type="button"
-          onClick={onCtaClick}
-          className="mt-12 inline-flex items-center gap-2
-                     rounded-full border border-white/30 bg-white/15
-                     px-6 py-3 text-sm font-medium text-white
-                     backdrop-blur-md
-                     hover:bg-white/25 transition-colors"
-          style={{ opacity: 0 }}
-        >
-          Více o tom co děláme
-          <ArrowDown aria-hidden="true" className="h-4 w-4" />
-        </button>
       </div>
+
+      {/* CTA — absolutní ve spodní třetině, menší a decentnější. */}
+      <button
+        ref={ctaRef}
+        type="button"
+        onClick={onCtaClick}
+        className="absolute bottom-16 left-1/2 z-10 -translate-x-1/2
+                   inline-flex items-center gap-2
+                   rounded-full border border-white/30 bg-white/15
+                   px-5 py-2.5 text-sm font-medium text-white
+                   backdrop-blur-md
+                   hover:bg-white/25 transition-colors"
+        style={{ opacity: 0 }}
+      >
+        <ArrowDown aria-hidden="true" className="h-3 w-3" />
+        Více o tom co děláme
+      </button>
     </section>
   );
 }
