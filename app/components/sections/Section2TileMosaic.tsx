@@ -42,7 +42,7 @@ export function Section2TileMosaic() {
       });
     });
 
-    // PERF: pauzuj videa když je sekce mimo viewport. 9 paralelních HTML5
+    // PERF: pauzuj videa když je sekce mimo viewport. 7 paralelních HTML5
     // videí spotřebovává GPU i když je uživatel jinde na stránce.
     const videos = Array.from(
       section.querySelectorAll<HTMLVideoElement>("video"),
@@ -69,7 +69,7 @@ export function Section2TileMosaic() {
     };
   }, []);
 
-  const tiles = [1, 2, 3, 4, 5, 6, 7, 8];
+  const tiles = [1, 2, 3, 4, 5, 6];
 
   return (
     <section
@@ -87,7 +87,7 @@ export function Section2TileMosaic() {
           className="mosaic-grid"
           style={{ willChange: "transform" }}
         >
-          {/* 8 okolních dlaždic (3×3 grid minus střed) */}
+          {/* 6 okolních dlaždic (2 horní + 2 střední boční + 2 spodní) */}
           {tiles.map((n) => (
             <div key={n} className={`tile tile-${n}`}>
               <div className="tile-fallback" />
@@ -129,12 +129,13 @@ export function Section2TileMosaic() {
       <style jsx>{`
         .mosaic-grid {
           display: grid;
-          grid-template-columns: 1fr 2fr 1fr;
+          /* 4 sloupce × 3 řady; center zabírá 2 prostřední sloupce */
+          grid-template-columns: 1fr 1fr 1fr 1fr;
           grid-template-rows: 1fr 2fr 1fr;
           grid-template-areas:
-            "t1 t2 t3"
-            "t4 tc t5"
-            "t6 t7 t8";
+            "t1 t1 t2 t2"
+            "t3 tc tc t4"
+            "t5 t5 t6 t6";
           gap: 8px;
           width: 100vw;
           height: 100vh;
@@ -145,7 +146,7 @@ export function Section2TileMosaic() {
           overflow: hidden;
           border-radius: 8px;
           background: var(--color-neutral);
-          /* force GPU layer — 9 videí na jedné GPU texture místo 9 vrstev */
+          /* force GPU layer — videa na jedné GPU texture místo samostatných vrstev */
           transform: translateZ(0);
           -webkit-transform: translateZ(0);
           backface-visibility: hidden;
@@ -158,8 +159,6 @@ export function Section2TileMosaic() {
         .tile-4 { grid-area: t4; }
         .tile-5 { grid-area: t5; }
         .tile-6 { grid-area: t6; }
-        .tile-7 { grid-area: t7; }
-        .tile-8 { grid-area: t8; }
         .tile-center { grid-area: tc; }
         .tile-fallback {
           position: absolute;
