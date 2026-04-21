@@ -91,8 +91,8 @@ export function Section1Hero() {
         }}
       />
 
-      {/* Content — headline vertikálně centrovaný */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-6">
+      {/* Content — headline vertikálně centrovaný, pt-24 dává odstup od plovoucího navu */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 pt-24">
         <h1
           ref={headlineRef}
           className="font-manrope text-white text-center max-w-5xl"
@@ -102,6 +102,7 @@ export function Section1Hero() {
             fontWeight: 500,
             lineHeight: 1.08,
             letterSpacing: "-0.025em",
+            textShadow: "0 2px 24px rgba(0, 0, 0, 0.35)",
           }}
         >
           Stavíme viditelnost<br />vašich projektů

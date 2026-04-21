@@ -5,6 +5,7 @@
 // Scroll je zamčený, dokud loader běží.
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { gsap } from "gsap";
 import { useLenis } from "../providers/LenisProvider";
 import {
@@ -70,7 +71,20 @@ export function Section0Loader() {
       aria-label="Načítání stránky"
       aria-live="polite"
     >
-      {/* Logo — SVG zatím není, text fallback v brand stylu */}
+      {/* Logo — bílá varianta přes CSS filter */}
+      <Image
+        src="/images/logo.png"
+        alt="Constructiva"
+        width={120}
+        height={32}
+        priority
+        style={{
+          filter: "brightness(0) invert(1)",
+          marginBottom: "24px",
+        }}
+      />
+
+      {/* Název v brand stylu pod logem */}
       <div
         className="font-manrope font-medium uppercase"
         style={{
