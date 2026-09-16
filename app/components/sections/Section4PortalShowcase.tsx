@@ -149,6 +149,7 @@ const SERVICES: Service[] = [
 export function Section4PortalShowcase() {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const lenis = useLenis();
 
@@ -177,6 +178,20 @@ export function Section4PortalShowcase() {
           },
         },
       );
+
+      // Parallax rozmazaného pozadí — pomalejší než scroll, jen transform.
+      if (bgRef.current) {
+        gsap.to(bgRef.current, {
+          yPercent: -9,
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 0.6,
+          },
+        });
+      }
 
       ScrollTrigger.create({
         trigger: section,
@@ -265,9 +280,87 @@ export function Section4PortalShowcase() {
     >
       {/* ════════ Desktop — pinned 3 sloupce ════════ */}
       <div className="hidden md:flex md:sticky md:top-0 md:h-screen md:w-full md:items-center md:justify-center md:overflow-hidden">
+        {/* ── Pozadí: rozmazané staveniště + brandový nádech ── */}
+        <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+          {/* Fotka staveniště — silně rozmazaná a odbarvená.
+              Blur se počítá jednou (statický obrázek), parallax jen posouvá transform. */}
+          <div
+            ref={bgRef}
+            className="absolute"
+            style={{
+              inset: "-12%",
+              backgroundImage: `url(${asset("/images/portal/mockup-bg-blur.png")})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center 22%",
+              filter: "blur(56px) saturate(0.7)",
+              opacity: 0.62,
+              transform: "scale(1.15)",
+              willChange: "transform",
+            }}
+          />
+
+          {/* Brandový modrý nádech přes fotku */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(165deg, rgba(168,197,214,0.34) 0%, rgba(21,42,62,0.10) 42%, rgba(21,42,62,0.30) 100%)",
+            }}
+          />
+
+          {/* Měkké světelné skvrny — hloubka */}
+          <div
+            className="absolute"
+            style={{
+              top: "-20%",
+              left: "-10%",
+              width: "55vw",
+              height: "55vw",
+              background:
+                "radial-gradient(circle, rgba(168,197,214,0.6) 0%, rgba(168,197,214,0) 65%)",
+            }}
+          />
+          <div
+            className="absolute"
+            style={{
+              bottom: "-25%",
+              right: "-8%",
+              width: "50vw",
+              height: "50vw",
+              background:
+                "radial-gradient(circle, rgba(21,42,62,0.22) 0%, rgba(21,42,62,0) 65%)",
+            }}
+          />
+
+          {/* Prosvětlený střed — aby bílé karty nezanikly */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 75% 55% at 50% 50%, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0) 80%)",
+            }}
+          />
+
+          {/* Náběh a doběh do bílé — plynulý přechod na sousední sekce */}
+          <div
+            className="absolute inset-x-0 top-0 h-28"
+            style={{
+              background:
+                "linear-gradient(to bottom, #FFFFFF 0%, rgba(255,255,255,0) 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 h-28"
+            style={{
+              background:
+                "linear-gradient(to top, #FFFFFF 0%, rgba(255,255,255,0) 100%)",
+            }}
+          />
+        </div>
+
         <div
           ref={stageRef}
-          className="flex w-full items-stretch justify-center gap-8 px-8 lg:gap-12 xl:gap-16"
+          className="relative z-10 flex w-full items-stretch justify-center gap-8 px-8 lg:gap-12 xl:gap-16"
           style={{ willChange: "transform, opacity" }}
         >
           <VideoCard activeIndex={activeIndex} />
@@ -484,7 +577,7 @@ function InfoCard({ activeIndex }: { activeIndex: number }) {
 // ═══════════════════════════════════════════════════════════
 function MobileStack() {
   return (
-    <div className="flex flex-col gap-8 bg-white px-4 py-14">
+    <div className="flex flex-col gap-8 bg-gradient-to-b from-white via-[#EDF2F7] to-white px-4 py-14">
       <header className="flex items-center gap-3 px-1">
         <Image
           src="/images/logo.svg"
